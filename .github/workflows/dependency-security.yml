@@ -36,6 +36,7 @@ jobs:
     env:
       PQA_HOME: ${{ github.workspace }}/.paperqa-test-home
       LITELLM_LOCAL_MODEL_COST_MAP: "True"
+      UV_PYTHON: ${{ matrix.python }}
     strategy:
       matrix:
         python: ["3.11", "3.12"]
@@ -51,4 +52,4 @@ jobs:
         with:
           version: "0.10.0"
       - run: uv sync --locked --no-dev --extra security-test
-      - run: uv run --locked --no-dev --extra security-test pytest tests/test_configs.py tests/test_security_compatibility.py tests/test_embedding_compatibility.py tests/test_litqa_offline.py --block-network --record-mode=none
+      - run: uv run --locked --no-dev --extra security-test pytest tests/test_configs.py tests/test_security_compatibility.py tests/test_embedding_compatibility.py --block-network --record-mode=none

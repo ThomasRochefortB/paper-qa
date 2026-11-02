@@ -18,6 +18,8 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
     if: github.event_name == 'pull_request'
     strategy:
       matrix:
@@ -39,6 +41,8 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
     strategy:
       matrix:
         python-version: [3.11] # Our min supported Python version
@@ -50,7 +54,6 @@ jobs:
         with:
           version: "0.10.0"
           enable-cache: true
-      - run: uv python pin ${{ matrix.python-version }}
       - uses: hynek/build-and-inspect-python-package@d44ca7d91762de7a7d5436ddae667c6da6d1c3df # v2
       - run: uv sync --locked --no-dev --extra lint --python-preference=only-managed
       - run: uv run --locked --no-dev --extra lint refurb paperqa tests
@@ -58,6 +61,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
     strategy:
       matrix:
         python-version: [3.11, 3.12] # Our min and max supported Python versions
@@ -69,7 +74,6 @@ jobs:
         with:
           version: "0.10.0"
           enable-cache: true
-      - run: uv python pin ${{ matrix.python-version }}
       - run: uv sync --locked --no-dev --extra test --python-preference=only-managed
       - name: Cache datasets
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
