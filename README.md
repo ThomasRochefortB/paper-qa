@@ -51,6 +51,7 @@ question answering, summarization, and contradiction detection.
 - [Reproduction](#reproduction)
 - [Citation](#citation)
 - [Running tests without provider credentials](#running-tests-without-provider-credentials)
+  - [Document identifier compatibility](#document-identifier-compatibility)
 
 <!--TOC-->
 
@@ -1026,3 +1027,10 @@ Use `uv run --locked --no-dev --extra lint pre-commit run --all-files` for the
 formatting and type checks. The mypy hook uses the project's lockfile so it checks
 the same client APIs as the application. The `test` and `lint` extras avoid
 installing optional local GPU/model packages; those remain in the `local` extra.
+
+### Document identifier compatibility
+
+Identifiers derived from DOIs and UUIDs now use SHA-256 instead of MD5. Existing
+stored document IDs remain unchanged; IDs generated again for the same DOI will
+change. Rebuild or migrate any external index that relies on those generated IDs
+before mixing data produced by older and newer versions.
