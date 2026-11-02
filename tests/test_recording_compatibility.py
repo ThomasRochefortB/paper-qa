@@ -11,14 +11,14 @@ from vcr.request import Request
 from .conftest import (
     CASSETTES_DIR,
     VCR_DEFAULT_MATCH_ON,
-    normalize_openai_stream_default,
+    normalize_openai_wire_defaults,
 )
 
 
-def chat_request(payload, host="api.openai.com"):
+def api_request(payload, host="api.openai.com", path="chat/completions"):
     return Request(
         "POST",
-        f"https://{host}/v1/chat/completions",
+        f"https://{host}/v1/{path}",
         json.dumps(payload).encode(),
         {"Content-Type": "application/json"},
     )
@@ -26,10 +26,8 @@ def chat_request(payload, host="api.openai.com"):
 
 def test_non_streaming_default_matches_an_omitted_default() -> None:
     payload = {"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "Q"}]}
-    recorded = normalize_openai_stream_default(
-        chat_request({**payload, "stream": False})
-    )
-    current = normalize_openai_stream_default(chat_request(payload))
+    recorded = normalize_openai_wire_defaults(api_request({**payload, "stream": False}))
+    current = normalize_openai_wire_defaults(api_request(payload))
     body(recorded, current)
 
 
@@ -38,18 +36,16 @@ def test_non_streaming_default_matches_an_omitted_default() -> None:
 )
 def test_semantic_request_changes_still_fail_replay_matching(changed) -> None:
     payload = {"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "Q"}]}
-    recorded = normalize_openai_stream_default(
-        chat_request({**payload, "stream": False})
-    )
-    current = normalize_openai_stream_default(chat_request({**payload, **changed}))
+    recorded = normalize_openai_wire_defaults(api_request({**payload, "stream": False}))
+    current = normalize_openai_wire_defaults(api_request({**payload, **changed}))
     with pytest.raises(AssertionError):
         body(recorded, current)
 
 
 def test_other_hosts_are_not_normalized() -> None:
-    request = chat_request({"stream": False}, host="example.org")
+    request = api_request({"stream": False}, host="example.org")
     original = request.body
-    assert normalize_openai_stream_default(request).body == original
+    assert normalize_openai_wire_defaults(request).body == original
 
 
 def test_existing_chat_recording_accepts_the_sdk_default_omission() -> None:
@@ -63,7 +59,66 @@ def test_existing_chat_recording_accepts_the_sdk_default_omission() -> None:
     recorder = vcr.VCR(
         record_mode="none",
         match_on=[*VCR_DEFAULT_MATCH_ON, "body"],
-        before_record_request=normalize_openai_stream_default,
+        before_record_request=normalize_openai_wire_defaults,
     )
     with recorder.use_cassette(str(path)) as cassette:
-        assert cassette.can_play_response_for(chat_request(payload))
+        assert cassette.can_play_response_for(api_request(payload))
+
+
+def test_embedding_encodings_match_as_equivalent_numeric_vectors() -> None:
+    payload = {
+        "model": "text-embedding-3-small",
+        "input": ["A document"],
+        "dimensions": 3,
+    }
+    recorded = normalize_openai_wire_defaults(
+        api_request({**payload, "encoding_format": "base64"}, path="embeddings")
+    )
+    current = normalize_openai_wire_defaults(
+        api_request({**payload, "encoding_format": "float"}, path="embeddings")
+    )
+    body(recorded, current)
+
+
+@pytest.mark.parametrize(
+    "changed",
+    [
+        {"model": "another-model"},
+        {"input": ["Another document"]},
+        {"dimensions": 6},
+        {"encoding_format": "unsupported"},
+    ],
+)
+def test_embedding_semantics_still_fail_replay_matching(changed) -> None:
+    payload = {
+        "model": "text-embedding-3-small",
+        "input": ["A document"],
+        "dimensions": 3,
+        "encoding_format": "base64",
+    }
+    recorded = normalize_openai_wire_defaults(api_request(payload, path="embeddings"))
+    current = normalize_openai_wire_defaults(
+        api_request({**payload, **changed}, path="embeddings")
+    )
+    with pytest.raises(AssertionError):
+        body(recorded, current)
+
+
+def test_existing_embedding_recording_accepts_float_wire_encoding() -> None:
+    path = CASSETTES_DIR / "test_pdf_reader_match_doc_details.yaml"
+    recording = yaml.safe_load(path.read_text())
+    interaction = next(
+        row
+        for row in recording["interactions"]
+        if row["request"]["uri"].endswith("/embeddings")
+    )
+    payload = json.loads(interaction["request"]["body"])
+    assert payload["encoding_format"] == "base64"
+    payload["encoding_format"] = "float"
+    recorder = vcr.VCR(
+        record_mode="none",
+        match_on=[*VCR_DEFAULT_MATCH_ON, "body"],
+        before_record_request=normalize_openai_wire_defaults,
+    )
+    with recorder.use_cassette(str(path)) as cassette:
+        assert cassette.can_play_response_for(api_request(payload, path="embeddings"))

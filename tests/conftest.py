@@ -57,23 +57,35 @@ ANTHROPIC_API_KEY_HEADER = "x-api-key"
 VCR_DEFAULT_MATCH_ON = "method", "scheme", "host", "port", "path", "query"
 
 
-def normalize_openai_stream_default(request: Request) -> Request:
-    """Match an omitted non-streaming default without ignoring request content."""
+def normalize_openai_wire_defaults(request: Request) -> Request:
+    """Match equivalent SDK wire defaults while retaining semantic request fields."""
     url = urlsplit(request.uri)
     if (
-        request.method == "POST"
-        and url.netloc == "api.openai.com"
-        and url.path == "/v1/chat/completions"
+        request.method != "POST"
+        or url.netloc != "api.openai.com"
+        or url.path not in {"/v1/chat/completions", "/v1/embeddings"}
     ):
-        try:
-            payload = json.loads(request.body)
-        except (TypeError, ValueError):
-            return request
-        if isinstance(payload, dict) and payload.get("stream") is False:
-            # The patched SDK omits stream=False. All other fields, including
-            # model, messages, temperature and stream=True, must still match.
-            payload.pop("stream")
-            request.body = json.dumps(payload).encode()
+        return request
+    try:
+        payload = json.loads(request.body)
+    except (TypeError, ValueError):
+        return request
+    if not isinstance(payload, dict):
+        return request
+    if url.path == "/v1/chat/completions" and payload.get("stream") is False:
+        # The patched SDK omits the default. Keep stream=True and every other
+        # field (including the model, messages and temperature) significant.
+        payload.pop("stream")
+    elif url.path == "/v1/embeddings" and payload.get("encoding_format") in {
+        "base64",
+        "float",
+    }:
+        # Both represent the same numeric vectors, and PaperQA's embedding
+        # adapter explicitly handles both. Input/model/dimensions still match.
+        payload["encoding_format"] = "float"
+    else:
+        return request
+    request.body = json.dumps(payload).encode()
     return request
 
 
@@ -89,7 +101,7 @@ def fixture_vcr_config(pytestconfig: pytest.Config) -> dict[str, Any]:
         ],
         "record_mode": "once" if pytestconfig.getoption("--run-live") else "none",
         "allow_playback_repeats": True,
-        "before_record_request": normalize_openai_stream_default,
+        "before_record_request": normalize_openai_wire_defaults,
         "cassette_library_dir": str(CASSETTES_DIR),
     }
 
