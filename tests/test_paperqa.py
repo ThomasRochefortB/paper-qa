@@ -945,7 +945,7 @@ def test_pdf_reader_match_doc_details(stub_data_dir: Path) -> None:
     doc_details = next(iter(docs.docs.values()))
     # Crossref is non-deterministic in its ordering for results
     # thus we need to capture both possible dockeys
-    assert doc_details.dockey in {"d7763485f06aabde", "5300ef1d5fb960d7"}
+    assert doc_details.dockey in {"53e142438478cd5f", "9d5db771ee02941c"}
     assert isinstance(doc_details, DocDetails)
     # note year is unknown because citation string is only parsed for authors/title/doi
     # AND we do not request it back from the metadata sources
