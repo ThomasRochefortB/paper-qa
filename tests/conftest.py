@@ -17,13 +17,30 @@ from paperqa.settings import Settings
 from paperqa.types import PQASession
 from paperqa.utils import setup_default_logs
 
+# Replay the recorded HTTPX transport rather than LiteLLM's new aiohttp adapter.
+os.environ["DISABLE_AIOHTTP_TRANSPORT"] = "True"
+
 TESTS_DIR = Path(__file__).parent
 CASSETTES_DIR = TESTS_DIR / "cassettes"
 
 
 @pytest.fixture(autouse=True, scope="session")
-def _load_env() -> None:
-    load_dotenv()
+def _load_env(pytestconfig: pytest.Config) -> Iterator[None]:
+    if pytestconfig.getoption("--run-live"):
+        load_dotenv()
+        yield
+    else:
+        # Offline tests must not read local .env files or use real credentials.
+        with patch.dict(
+            os.environ,
+            {
+                "OPENAI_API_KEY": "offline-test-key",
+                "ANTHROPIC_API_KEY": "offline-test-key",
+                "SEMANTIC_SCHOLAR_API_KEY": "offline-test-key",
+                "CROSSREF_API_KEY": "offline-test-key",
+            },
+        ):
+            yield
 
 
 @pytest.fixture(autouse=True)
@@ -38,7 +55,7 @@ VCR_DEFAULT_MATCH_ON = "method", "scheme", "host", "port", "path", "query"
 
 
 @pytest.fixture(scope="session", name="vcr_config")
-def fixture_vcr_config() -> dict[str, Any]:
+def fixture_vcr_config(pytestconfig: pytest.Config) -> dict[str, Any]:
     return {
         "filter_headers": [
             CROSSREF_HEADER_KEY,
@@ -47,7 +64,7 @@ def fixture_vcr_config() -> dict[str, Any]:
             ANTHROPIC_API_KEY_HEADER,
             "cookie",
         ],
-        "record_mode": "once",
+        "record_mode": "once" if pytestconfig.getoption("--run-live") else "none",
         "allow_playback_repeats": True,
         "cassette_library_dir": str(CASSETTES_DIR),
     }
@@ -131,3 +148,35 @@ def fixture_reset_log_levels(caplog) -> Iterator[None]:
         logger = logging.getLogger(name)
         logger.setLevel(logging.NOTSET)
         logger.propagate = True
+
+
+def pytest_addoption(parser: pytest.Parser) -> None:
+    """Require an explicit opt-in before running paid-provider integration tests."""
+    parser.addoption(
+        "--run-live",
+        action="store_true",
+        default=False,
+        help="Run integration tests that need live providers or external datasets",
+    )
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line(
+        "markers",
+        "live: integration test requiring a live provider or external dataset",
+    )
+    if not config.getoption("--run-live"):
+        config.option.block_network = True
+
+
+def pytest_collection_modifyitems(
+    config: pytest.Config, items: list[pytest.Item]
+) -> None:
+    if config.getoption("--run-live"):
+        return
+    marker = pytest.mark.skip(
+        reason="requires live external services; opt in with --run-live"
+    )
+    for item in items:
+        if item.get_closest_marker("live") is not None:
+            item.add_marker(marker)

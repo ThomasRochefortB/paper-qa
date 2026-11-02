@@ -10,12 +10,11 @@ from paperqa import Docs, Settings
 
 
 def test_default_settings_still_construct_the_client_and_router() -> None:
-    settings = Settings()
-    model = settings.get_llm()
+    model = Settings().get_llm()
     assert isinstance(model, LiteLLMModel)
     with patch.dict("os.environ", {"OPENAI_API_KEY": "offline-test-key"}):
         assert isinstance(model.router, litellm.Router)
-    assert Docs().texts == []
+    assert not Docs().texts
 
 
 @pytest.mark.asyncio

@@ -50,6 +50,7 @@ question answering, summarization, and contradiction detection.
   - [Can I save or load?](#can-i-save-or-load)
 - [Reproduction](#reproduction)
 - [Citation](#citation)
+- [Running tests without provider credentials](#running-tests-without-provider-credentials)
 
 <!--TOC-->
 
@@ -538,7 +539,6 @@ from paperqa import (
     LiteLLMEmbeddingModel,
 )
 
-
 model = HybridEmbeddingModel(
     models=[LiteLLMEmbeddingModel(), SparseEmbeddingModel(ndim=1024)]
 )
@@ -1001,3 +1001,28 @@ Please read and cite the following papers if you use this software:
     year = {2023}
 }
 ```
+
+## Running tests without provider credentials
+
+The default suite runs unit tests and existing HTTP recordings. It does not load
+local `.env` credentials. CI blocks unexpected network traffic and never re-records
+responses:
+
+```bash
+uv sync --locked --no-dev --extra test
+uv run --locked --no-dev --extra test pytest --block-network --record-mode=none
+```
+
+Tests marked `live` require real provider calls or unrecorded external resources.
+They remain available with their original assertions, but run only when explicitly
+requested. Supply your own credentials and account for provider charges before
+running them:
+
+```bash
+uv run --locked --no-dev --extra test pytest --run-live -m live
+```
+
+Use `uv run --locked --no-dev --extra lint pre-commit run --all-files` for the
+formatting and type checks. The mypy hook uses the project's lockfile so it checks
+the same client APIs as the application. The `test` and `lint` extras avoid
+installing optional local GPU/model packages; those remain in the `local` extra.

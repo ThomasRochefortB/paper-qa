@@ -234,11 +234,11 @@ wheels = [
 
 [[package]]
 name = "astroid"
-version = "4.3.4"
+version = "4.0.4"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/2d/87/5732fa68bf100a095cfcbd108f919220d995db99e1a7502b8119a869fd62/astroid-4.3.4.tar.gz", hash = "sha256:d515a105722b72098bbe82d430d65e635f742b6cbac3bdfaf8b7c188b87c5e39", size = 444627, upload-time = "2026-10-08T09:36:44.122Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/07/63/0adf26577da5eff6eb7a177876c1cfa213856be9926a000f65c4add9692b/astroid-4.0.4.tar.gz", hash = "sha256:986fed8bcf79fb82c78b18a53352a0b287a73817d6dbcfba3162da36667c49a0", size = 406358, upload-time = "2026-02-07T23:35:07.509Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/16/d4/f23c0ac6e6de33ba5686cb21c672c95e0c2d3d4c9351f16d3b5fed818652/astroid-4.3.4-py3-none-any.whl", hash = "sha256:2bcd0d02648a443a4b818c952c3550091989daefac3c12d3b83b2289482e0818", size = 288310, upload-time = "2026-10-08T09:36:42.284Z" },
+    { url = "https://files.pythonhosted.org/packages/b0/cf/1c5f42b110e57bc5502eb80dbc3b03d256926062519224835ef08134f1f9/astroid-4.0.4-py3-none-any.whl", hash = "sha256:52f39653876c7dec3e3afd4c2696920e05c83832b9737afc21928f2d2eb7a753", size = 276445, upload-time = "2026-02-07T23:35:05.344Z" },
 ]
 
 [[package]]
@@ -2213,6 +2213,22 @@ dev = [
 ldp = [
     { name = "ldp" },
 ]
+lint = [
+    { name = "datasets" },
+    { name = "fsspec" },
+    { name = "ldp" },
+    { name = "mypy" },
+    { name = "pandas-stubs" },
+    { name = "pre-commit" },
+    { name = "pyarrow" },
+    { name = "pylint" },
+    { name = "pylint-pydantic" },
+    { name = "pyzotero" },
+    { name = "qdrant-client" },
+    { name = "refurb" },
+    { name = "types-pyyaml" },
+    { name = "types-setuptools" },
+]
 local = [
     { name = "fonttools" },
     { name = "pillow" },
@@ -2228,6 +2244,23 @@ security-test = [
     { name = "pytest-asyncio" },
     { name = "pytest-recording" },
     { name = "pytest-subtests" },
+    { name = "pytest-timeout" },
+    { name = "typeguard" },
+]
+test = [
+    { name = "datasets" },
+    { name = "fsspec" },
+    { name = "ldp" },
+    { name = "pyarrow" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-recording" },
+    { name = "pytest-rerunfailures" },
+    { name = "pytest-subtests" },
+    { name = "pytest-timeout" },
+    { name = "pytest-xdist" },
+    { name = "pyzotero" },
+    { name = "qdrant-client" },
     { name = "typeguard" },
 ]
 typing = [
@@ -2266,19 +2299,25 @@ requires-dist = [
     { name = "ldp", marker = "extra == 'ldp'", specifier = ">=0.16.0,<0.17" },
     { name = "litellm", specifier = "==1.100.4" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.8" },
+    { name = "mypy", marker = "extra == 'lint'", specifier = ">=1.13,<1.14" },
     { name = "numpy" },
     { name = "pandas-stubs", marker = "extra == 'typing'" },
     { name = "paper-qa", extras = ["datasets", "ldp", "local", "qdrant", "typing", "zotero"], marker = "extra == 'dev'" },
+    { name = "paper-qa", extras = ["datasets", "ldp", "qdrant", "security-test", "zotero"], marker = "extra == 'test'" },
+    { name = "paper-qa", extras = ["datasets", "ldp", "qdrant", "typing", "zotero"], marker = "extra == 'lint'" },
     { name = "pillow", marker = "extra == 'local'", specifier = ">=13.0.0" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.4" },
+    { name = "pre-commit", marker = "extra == 'lint'", specifier = ">=3.4" },
     { name = "pyarrow", marker = "extra == 'datasets'", specifier = ">=23.0.1" },
     { name = "pybtex", specifier = ">=0.26.1" },
     { name = "pydantic", specifier = "~=2.0,>=2.10.1" },
     { name = "pydantic", marker = "extra == 'dev'", specifier = "~=2.0" },
     { name = "pydantic-settings" },
     { name = "pygments", specifier = ">=2.20.0" },
-    { name = "pylint", marker = "extra == 'dev'", specifier = ">=4.0.9" },
+    { name = "pylint", marker = "extra == 'dev'", specifier = ">=4.0.9,<4.1" },
+    { name = "pylint", marker = "extra == 'lint'", specifier = ">=4.0.9,<4.1" },
     { name = "pylint-pydantic", marker = "extra == 'dev'" },
+    { name = "pylint-pydantic", marker = "extra == 'lint'" },
     { name = "pymupdf", specifier = ">=1.24.12" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.3" },
     { name = "pytest", marker = "extra == 'security-test'", specifier = ">=9.0.3" },
@@ -2287,16 +2326,20 @@ requires-dist = [
     { name = "pytest-recording", marker = "extra == 'dev'" },
     { name = "pytest-recording", marker = "extra == 'security-test'" },
     { name = "pytest-rerunfailures", marker = "extra == 'dev'" },
+    { name = "pytest-rerunfailures", marker = "extra == 'test'" },
     { name = "pytest-subtests", marker = "extra == 'dev'" },
     { name = "pytest-subtests", marker = "extra == 'security-test'" },
     { name = "pytest-sugar", marker = "extra == 'dev'" },
+    { name = "pytest-timeout", marker = "extra == 'security-test'", specifier = ">=2.4.0,<3" },
     { name = "pytest-timer", extras = ["colorama"], marker = "extra == 'dev'" },
     { name = "pytest-xdist", marker = "extra == 'dev'" },
+    { name = "pytest-xdist", marker = "extra == 'test'" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
     { name = "python-dotenv", marker = "extra == 'dev'" },
     { name = "pyzotero", marker = "extra == 'zotero'" },
     { name = "qdrant-client", marker = "extra == 'qdrant'" },
     { name = "refurb", marker = "extra == 'dev'", specifier = ">=2" },
+    { name = "refurb", marker = "extra == 'lint'", specifier = ">=2,<3" },
     { name = "requests", specifier = ">=2.33.0" },
     { name = "rich" },
     { name = "sentence-transformers", marker = "extra == 'local'", specifier = ">=5.6.0,<6" },
@@ -2314,7 +2357,7 @@ requires-dist = [
     { name = "vcrpy", marker = "extra == 'dev'", specifier = ">=8.2.1" },
     { name = "virtualenv", marker = "extra == 'dev'", specifier = ">=21.14.9" },
 ]
-provides-extras = ["datasets", "dev", "ldp", "local", "qdrant", "security-test", "typing", "zotero"]
+provides-extras = ["datasets", "dev", "ldp", "lint", "local", "qdrant", "security-test", "test", "typing", "zotero"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "paper-qa", extras = ["dev"] }]
@@ -2740,7 +2783,7 @@ wheels = [
 
 [[package]]
 name = "pylint"
-version = "4.1.3"
+version = "4.0.10"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astroid" },
@@ -2751,9 +2794,9 @@ dependencies = [
     { name = "platformdirs" },
     { name = "tomlkit" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/38/c9/0bde4152a05a7686b431ce216fe3f3698b0c0d94c20bfa256dd935b608f6/pylint-4.1.3.tar.gz", hash = "sha256:9928603068edfa0d1a3c167f174b099d4b97c3db75d32d0fcdd029770b4713a9", size = 1756180, upload-time = "2026-10-11T07:49:10.69Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/81/d2/e548818e920ec543e58cc2082fea50a1a9485b3137e69ea27d647aede3f8/pylint-4.0.10.tar.gz", hash = "sha256:bf19280b10f2185bfbc898a28ac0b85c958af2e6d684a94984e12d3ac975d9f4", size = 1606855, upload-time = "2026-09-29T15:48:12.657Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3f/ba/62b18e2e157d05f976bd490b349b55d8850c2a454a5c313c91af9d2e0baf/pylint-4.1.3-py3-none-any.whl", hash = "sha256:a85357cae24f33ad8d86c8f3daaa92c600ae4012b54a57299cee76000e9364cf", size = 588959, upload-time = "2026-10-11T07:49:08.272Z" },
+    { url = "https://files.pythonhosted.org/packages/d7/0e/82aa640aa75f4a3c57d0458eafb2fa71d0f8ebec7ce8ba5cda95bc51b941/pylint-4.0.10-py3-none-any.whl", hash = "sha256:c259421f734e6262407b6a421a26f9513b13ac2c5ac2c160775c1658afb57fea", size = 542432, upload-time = "2026-09-29T15:48:10.452Z" },
 ]
 
 [[package]]
@@ -2885,6 +2928,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/f5/ac/5754f5edd6d508bc6493bc37d74b928f102a5fff82d9a80347e180998f08/pytest-sugar-1.0.0.tar.gz", hash = "sha256:6422e83258f5b0c04ce7c632176c7732cab5fdb909cb39cca5c9139f81276c0a", size = 14992, upload-time = "2024-02-01T18:30:36.735Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/92/fb/889f1b69da2f13691de09a111c16c4766a433382d44aa0ecf221deded44a/pytest_sugar-1.0.0-py3-none-any.whl", hash = "sha256:70ebcd8fc5795dc457ff8b69d266a4e2e8a74ae0c3edc749381c64b5246c8dfd", size = 10171, upload-time = "2024-02-01T18:30:29.395Z" },
+]
+
+[[package]]
+name = "pytest-timeout"
+version = "2.4.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pytest" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ac/82/4c9ecabab13363e72d880f2fb504c5f750433b2b6f16e99f4ec21ada284c/pytest_timeout-2.4.0.tar.gz", hash = "sha256:7e68e90b01f9eff71332b25001f85c75495fc4e3a836701876183c4bcfd0540a", size = 17973, upload-time = "2025-05-05T19:44:34.99Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fa/b6/3127540ecdf1464a00e5a01ee60a1b09175f6913f0644ac748494d9c4b21/pytest_timeout-2.4.0-py3-none-any.whl", hash = "sha256:c42667e5cdadb151aeb5b26d114aff6bdf5a907f176a007a30b940d3d865b5c2", size = 14382, upload-time = "2025-05-05T19:44:33.502Z" },
 ]
 
 [[package]]

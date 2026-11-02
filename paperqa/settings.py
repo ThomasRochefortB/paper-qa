@@ -3,6 +3,7 @@ import importlib.resources
 import os
 import pathlib
 import warnings
+from collections import UserDict
 from collections.abc import Callable, Mapping
 from enum import StrEnum
 from pydoc import locate
@@ -10,7 +11,7 @@ from typing import Any, ClassVar, Self, TypeAlias, assert_never, cast
 
 import anyio
 from aviary.core import ToolSelector
-from llmclient import EmbeddingModel, LiteLLMModel, embedding_model_factory
+from llmclient import EmbeddingModel, LiteLLMModel
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -137,8 +138,7 @@ class ChunkingOptions(StrEnum):
     def valid_parsings(self) -> list[ParsingOptions]:
         # Note that SIMPLE_OVERLAP must be valid for all by default
         # TODO: implement for future parsing options
-        valid_parsing_dict: dict[str, list[ParsingOptions]] = {}
-        return valid_parsing_dict.get(self.value, [])  # noqa: FURB184
+        return []
 
 
 class ParsingSettings(BaseModel):
@@ -227,10 +227,11 @@ class ParsingSettings(BaseModel):
         )
 
 
-class _FormatDict(dict):  # noqa: FURB189
+class _FormatDict(UserDict):
     """Mock a dictionary and store any missing items."""
 
     def __init__(self) -> None:
+        super().__init__()
         self.key_set: set[str] = set()
 
     def __missing__(self, key: str) -> str:
@@ -807,6 +808,8 @@ class Settings(BaseSettings):
         )
 
     def get_embedding_model(self) -> EmbeddingModel:
+        from paperqa.llms import embedding_model_factory
+
         return embedding_model_factory(self.embedding, **(self.embedding_config or {}))
 
     def make_aviary_tool_selector(self, agent_type: str | type) -> ToolSelector | None:

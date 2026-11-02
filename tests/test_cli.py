@@ -49,6 +49,7 @@ def test_can_modify_settings(capsys, stub_data_dir: Path) -> None:
         os.unlink(pqa_directory("settings") / "unit_test.json")
 
 
+@pytest.mark.live
 def test_cli_ask(agent_index_dir: Path, stub_data_dir: Path) -> None:
     settings = Settings.from_name("debug")
     settings.agent.index.index_directory = agent_index_dir
@@ -68,6 +69,7 @@ def test_cli_ask(agent_index_dir: Path, stub_data_dir: Path) -> None:
     assert found_answer.model_dump_json() == response.model_dump_json()
 
 
+@pytest.mark.live
 def test_cli_can_build_and_search_index(
     agent_index_dir: Path, stub_data_dir: Path
 ) -> None:

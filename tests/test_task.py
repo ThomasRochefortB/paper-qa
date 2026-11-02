@@ -97,6 +97,7 @@ class TestTaskDataset:
         [(LitQAv2TaskSplit.TRAIN, 159), (LitQAv2TaskSplit.EVAL, 40)],
     )
     @pytest.mark.asyncio
+    @pytest.mark.live
     async def test___len__(
         self,
         split: str | LitQAv2TaskSplit,
@@ -138,6 +139,7 @@ class TestTaskDataset:
             *(ds.get_new_env_by_idx(i).validate_sources() for i in range(len(ds)))
         )
 
+    @pytest.mark.live
     @pytest.mark.asyncio
     async def test_evaluation(
         self, subtests: SubTests, base_query_request: QueryRequest

@@ -671,7 +671,7 @@ async def get_directory_index(  # noqa: PLR0912
         async with anyio.create_task_group() as tg:
             for rel_file_path in valid_papers_rel_file_paths:
                 if index_settings.sync_with_paper_directory:
-                    tg.start_soon(
+                    _ = tg.start_soon(
                         process_file,
                         rel_file_path,
                         search_index,

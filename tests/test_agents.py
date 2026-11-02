@@ -52,6 +52,7 @@ from paperqa.types import Context, Doc, PQASession, Text
 from paperqa.utils import extract_thought, get_year, md5sum
 
 
+@pytest.mark.live
 @pytest.mark.asyncio
 async def test_get_directory_index(agent_test_settings: Settings) -> None:
     # Since agent_test_settings is used by other tests, we use a tempdir so we
@@ -107,6 +108,7 @@ async def test_get_directory_index(agent_test_settings: Settings) -> None:
             await get_directory_index(settings=agent_test_settings, build=False)
 
 
+@pytest.mark.live
 @pytest.mark.asyncio
 async def test_resuming_crashed_index_build(agent_test_settings: Settings) -> None:
     index_settings = agent_test_settings.agent.index
@@ -185,6 +187,7 @@ EXPECTED_STUB_DATA_FILES = {
 }
 
 
+@pytest.mark.live
 @pytest.mark.asyncio
 async def test_get_directory_index_w_manifest(agent_test_settings: Settings) -> None:
     # Set the paper_directory to be a relative path as starting point to confirm this
@@ -230,6 +233,7 @@ async def test_get_directory_index_w_manifest(agent_test_settings: Settings) -> 
         assert top_result.title == "Frederick Bates (Wikipedia article)"
 
 
+@pytest.mark.live
 @pytest.mark.flaky(reruns=2, only_rerun=["AssertionError", "httpx.RemoteProtocolError"])
 @pytest.mark.parametrize("agent_type", [FAKE_AGENT_TYPE, ToolSelector, SimpleAgent])
 @pytest.mark.asyncio
@@ -271,6 +275,7 @@ async def test_agent_types(
         assert response.session.cost > 0, "Expected nonzero cost"
 
 
+@pytest.mark.live
 @pytest.mark.asyncio
 async def test_successful_memory_agent(agent_test_settings: Settings) -> None:
     tic = time.perf_counter()
@@ -353,6 +358,7 @@ async def test_successful_memory_agent(agent_test_settings: Settings) -> None:
     assert all(thought and "<thinking>" not in thought for thought in thoughts)
 
 
+@pytest.mark.live
 @pytest.mark.parametrize("agent_type", [ToolSelector, SimpleAgent])
 @pytest.mark.asyncio
 async def test_timeout(agent_test_settings: Settings, agent_type: str | type) -> None:
@@ -371,6 +377,7 @@ async def test_timeout(agent_test_settings: Settings, agent_type: str | type) ->
     assert CANNOT_ANSWER_PHRASE in response.session.answer
 
 
+@pytest.mark.live
 @pytest.mark.flaky(reruns=3, only_rerun=["AssertionError"])
 @pytest.mark.asyncio
 async def test_propagate_options(agent_test_settings: Settings) -> None:
@@ -405,6 +412,7 @@ async def test_propagate_options(agent_test_settings: Settings) -> None:
     ), "Summary was not skipped"
 
 
+@pytest.mark.live
 @pytest.mark.asyncio
 async def test_gather_evidence_rejects_empty_docs(
     agent_test_settings: Settings,
@@ -460,6 +468,7 @@ async def test_gather_evidence_rejects_empty_docs(
     ), "Agent should have hit its max timesteps"
 
 
+@pytest.mark.live
 @pytest.mark.parametrize("callback_type", [None, "async"])
 @pytest.mark.flaky(reruns=3, only_rerun=["AssertionError", "EmptyDocsError"])
 @pytest.mark.asyncio
@@ -830,6 +839,7 @@ def fixture_stub_gradable_env(
 
 
 class TestGradablePaperQAEnvironment:
+    @pytest.mark.live
     @pytest.mark.flaky(reruns=2, only_rerun=["AssertionError"])
     @pytest.mark.asyncio
     async def test_deepcopy_env(
@@ -904,6 +914,7 @@ class TestGradablePaperQAEnvironment:
         assert not done
         assert not truncated
 
+    @pytest.mark.live
     @pytest.mark.asyncio
     async def test_unsure_answer(
         self,

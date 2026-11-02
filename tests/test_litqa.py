@@ -193,6 +193,7 @@ class TestLitQAEvaluation:
             qa_prompt_2a != qa_prompt_1a
         ), "Different seeding strategies should lead to different prompts"
 
+    @pytest.mark.live
     def test_creating_litqa_questions(self) -> None:
         """Test making LitQA eval questions after downloading from Hugging Face Hub."""
         _, eval_split = read_litqa_v2_from_hub(seed=42)
