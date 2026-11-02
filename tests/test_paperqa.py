@@ -10,7 +10,6 @@ from io import BytesIO
 from pathlib import Path
 from typing import cast
 
-import httpx
 import numpy as np
 import pytest
 from llmclient import (
@@ -171,14 +170,17 @@ def test_citations_with_nonstandard_chars() -> None:
 def test_maybe_is_text() -> None:
     assert maybe_is_text("This is a test. The sample conc. was 1.0 mM (at 245 ^F)")
     assert not maybe_is_text("\\C0\\C0\\B1\x00")
-    # get front page of wikipedia
-    r = httpx.get("https://en.wikipedia.org/wiki/National_Flag_of_Canada_Day")
-    assert maybe_is_text(r.text)
+    # Keep text/HTML detection independent of public-site access policies.
+    html = (
+        "<!DOCTYPE html><html><head><title>Canada Day</title></head>"
+        "<body><p>A sample article about the national flag of Canada.</p></body></html>"
+    )
+    assert maybe_is_text(html)
 
-    assert maybe_is_html(BytesIO(r.text.encode()))
+    assert maybe_is_html(BytesIO(html.encode()))
 
     # now force it to contain lots of weird encoding
-    bad_text = r.text.encode("latin1", "ignore").decode("utf-16", "ignore")
+    bad_text = html.encode("latin1", "ignore").decode("utf-16", "ignore")
     assert not maybe_is_text(bad_text)
 
     # account for possible spaces in the text due to tables or title pages
@@ -421,6 +423,7 @@ def test_llm_parse_json_newlines() -> None:
     }
 
 
+@pytest.mark.live
 @pytest.mark.asyncio
 async def test_chain_completion() -> None:
     s = Settings(llm="babbage-002", temperature=0.2)
@@ -450,6 +453,7 @@ async def test_chain_completion() -> None:
     assert completion.cost > 0
 
 
+@pytest.mark.live
 @pytest.mark.skipif(os.environ.get("ANTHROPIC_API_KEY") is None, reason="No API key")
 @pytest.mark.asyncio
 async def test_anthropic_chain(stub_data_dir: Path) -> None:
@@ -516,6 +520,7 @@ async def test_docs_lifecycle(subtests: SubTests, stub_data_dir: Path) -> None:
         assert all(t not in docs.texts_index for t in docs.texts)
 
 
+@pytest.mark.live
 def test_evidence(docs_fixture) -> None:
     debug_settings = Settings.from_name("debug")
     evidence = docs_fixture.get_evidence(
@@ -525,6 +530,7 @@ def test_evidence(docs_fixture) -> None:
     assert len(evidence) >= debug_settings.answer.evidence_k
 
 
+@pytest.mark.live
 def test_json_evidence(docs_fixture) -> None:
     settings = Settings.from_name("fast")
     settings.prompts.use_json = True
@@ -545,6 +551,7 @@ def test_json_evidence(docs_fixture) -> None:
     assert evidence[0].author_name
 
 
+@pytest.mark.live
 def test_ablations(docs_fixture) -> None:
     settings = Settings()
     settings.answer.evidence_skip_summary = True
@@ -560,6 +567,7 @@ def test_ablations(docs_fixture) -> None:
     assert len(contexts) == len(docs_fixture.texts), "evidence retrieval not ablated"
 
 
+@pytest.mark.live
 def test_location_awareness(docs_fixture) -> None:
     settings = Settings()
     settings.answer.evidence_k = 3
@@ -579,10 +587,12 @@ def test_location_awareness(docs_fixture) -> None:
     ), "location not found in evidence"
 
 
+@pytest.mark.live
 def test_query(docs_fixture) -> None:
     docs_fixture.query("Is XAI usable in chemistry?")
 
 
+@pytest.mark.live
 def test_llmresult_callback(docs_fixture) -> None:
     my_results = []
 
@@ -599,6 +609,7 @@ def test_llmresult_callback(docs_fixture) -> None:
     assert my_results[0].name
 
 
+@pytest.mark.live
 def test_duplicate(stub_data_dir: Path) -> None:
     """Check Docs doesn't store duplicates, while checking nonduplicate docs are stored."""
     docs = Docs()
@@ -626,6 +637,7 @@ def test_duplicate(stub_data_dir: Path) -> None:
     ), "Unique documents should be hashed as unique"
 
 
+@pytest.mark.live
 @pytest.mark.parametrize("vector_store", [NumpyVectorStore, QdrantVectorStore])
 def test_docs_with_custom_embedding(
     subtests: SubTests, stub_data_dir: Path, vector_store: type[VectorStore]
@@ -675,6 +687,7 @@ def test_docs_with_custom_embedding(
         assert docs.texts_index == docs_deep_copy.texts_index
 
 
+@pytest.mark.live
 @pytest.mark.parametrize("vector_store", [NumpyVectorStore, QdrantVectorStore])
 def test_sparse_embedding(stub_data_dir: Path, vector_store: type[VectorStore]) -> None:
     docs = Docs(texts_index=vector_store())
@@ -694,6 +707,7 @@ def test_sparse_embedding(stub_data_dir: Path, vector_store: type[VectorStore]) 
     assert np.shape(docs.texts[0].embedding) == np.shape(docs.texts[1].embedding)
 
 
+@pytest.mark.live
 @pytest.mark.parametrize("vector_store", [NumpyVectorStore, QdrantVectorStore])
 def test_hybrid_embedding(stub_data_dir: Path, vector_store: type[VectorStore]) -> None:
     emb_model = HybridEmbeddingModel(
@@ -724,6 +738,7 @@ def test_hybrid_embedding(stub_data_dir: Path, vector_store: type[VectorStore]) 
     assert any(docs.texts[0].embedding)
 
 
+@pytest.mark.live
 def test_custom_llm(stub_data_dir: Path) -> None:
     from llmclient import Chunk
 
@@ -761,6 +776,7 @@ def test_custom_llm(stub_data_dir: Path) -> None:
     assert "Echo" in evidence[0].context
 
 
+@pytest.mark.live
 def test_docs_pickle(stub_data_dir) -> None:
     """Ensure that Docs object can be pickled and unpickled correctly."""
     docs = Docs()
@@ -778,6 +794,7 @@ def test_docs_pickle(stub_data_dir) -> None:
     assert len(unpickled_docs.docs) == 1
 
 
+@pytest.mark.live
 @pytest.mark.parametrize(
     ("qa_prompt", "unsure_sentinel"),
     [
@@ -807,6 +824,7 @@ def test_unrelated_context(
     assert unsure_sentinel in session.answer
 
 
+@pytest.mark.live
 def test_repeat_keys(stub_data_dir) -> None:
     docs = Docs()
     result = docs.add(
@@ -830,11 +848,13 @@ def test_repeat_keys(stub_data_dir) -> None:
     assert ds[1].docname == "Wiki2023a"
 
 
+@pytest.mark.live
 def test_can_read_normal_pdf_reader(docs_fixture) -> None:
     answer = docs_fixture.query("Are counterfactuals actionable? [yes/no]")
     assert "yes" in answer.answer or "Yes" in answer.answer
 
 
+@pytest.mark.live
 def test_pdf_reader_w_no_match_doc_details(stub_data_dir: Path) -> None:
     docs = Docs()
     docs.add(stub_data_dir / "paper.pdf", "Wellawatte et al, XAI Review, 2023")
@@ -960,6 +980,7 @@ def test_pdf_reader_match_doc_details(stub_data_dir: Path) -> None:
     raise AssertionError(f"Query was incorrect across {num_retries} retries.")
 
 
+@pytest.mark.live
 def test_fileio_reader_pdf(stub_data_dir: Path) -> None:
     with (stub_data_dir / "paper.pdf").open("rb") as f:
         docs = Docs()
@@ -972,6 +993,7 @@ def test_fileio_reader_pdf(stub_data_dir: Path) -> None:
     raise AssertionError(f"Query was incorrect across {num_retries} retries.")
 
 
+@pytest.mark.live
 def test_fileio_reader_txt(stub_data_dir: Path) -> None:
     # can't use curie, because it has trouble with parsed HTML
     docs = Docs()
@@ -1051,6 +1073,7 @@ def test_chunk_metadata_reader(stub_data_dir: Path) -> None:
     assert metadata.total_parsed_text_length // 3000 <= len(chunk_text)
 
 
+@pytest.mark.live
 def test_code() -> None:
     settings = Settings.from_name("fast")
     docs = Docs()
@@ -1071,6 +1094,7 @@ def test_zotero() -> None:
         ZoteroDB()  # "group" if group library
 
 
+@pytest.mark.live
 def test_too_much_evidence(
     stub_data_dir: Path, stub_data_dir_w_near_dupes: Path
 ) -> None:
@@ -1092,6 +1116,7 @@ def test_too_much_evidence(
     docs.query("What is Barrack's greatest accomplishment?", settings=settings)
 
 
+@pytest.mark.live
 def test_custom_prompts(stub_data_dir: Path) -> None:
     my_qaprompt = (
         "Answer the question '{question}' using the country name alone. For example: A:"
@@ -1106,6 +1131,7 @@ def test_custom_prompts(stub_data_dir: Path) -> None:
     assert "United States" in answer.answer
 
 
+@pytest.mark.live
 def test_pre_prompt(stub_data_dir: Path) -> None:
     pre = (
         "What is water's boiling point in Fahrenheit? Please respond with a complete"
@@ -1123,6 +1149,7 @@ def test_pre_prompt(stub_data_dir: Path) -> None:
     )
 
 
+@pytest.mark.live
 def test_post_prompt(stub_data_dir: Path) -> None:
     post = "The opposite of down is"
     settings = Settings.from_name("fast")
@@ -1133,6 +1160,7 @@ def test_post_prompt(stub_data_dir: Path) -> None:
     assert "up" in response.answer.lower()
 
 
+@pytest.mark.live
 def test_external_doc_index(stub_data_dir: Path) -> None:
     docs = Docs()
     docs.add(
@@ -1145,6 +1173,7 @@ def test_external_doc_index(stub_data_dir: Path) -> None:
     assert docs2.get_evidence("What is the date of flag day?").contexts
 
 
+@pytest.mark.live
 def test_context_inner_outer_prompt(stub_data_dir: Path) -> None:
 
     prompt_settings = Settings()
@@ -1169,6 +1198,7 @@ def test_context_inner_outer_prompt(stub_data_dir: Path) -> None:
     assert "Valid Keys" not in response.context
 
 
+@pytest.mark.live
 def test_evidence_detailed_citations_shim(stub_data_dir: Path) -> None:
     # TODO: delete this test in v6
     settings = Settings.from_name("fast")

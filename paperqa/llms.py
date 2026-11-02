@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import itertools
 import logging
 import uuid
@@ -18,10 +19,12 @@ from llmclient import (
     EmbeddingModel,
     EmbeddingModes,
     HybridEmbeddingModel,
-    LiteLLMEmbeddingModel,
     LLMResult,
     SentenceTransformerEmbeddingModel,
     SparseEmbeddingModel,
+)
+from llmclient import (
+    LiteLLMEmbeddingModel as ClientLiteLLMEmbeddingModel,
 )
 from pydantic import (
     BaseModel,
@@ -38,6 +41,25 @@ try:
     qdrant_installed = True
 except ImportError:
     qdrant_installed = False
+
+
+class LiteLLMEmbeddingModel(ClientLiteLLMEmbeddingModel):
+    """Normalize SDK float and base64 responses to PaperQA's numeric vectors."""
+
+    async def embed_documents(
+        self, texts: list[str], batch_size: int = 16
+    ) -> list[list[float]]:
+        vectors = await super().embed_documents(texts, batch_size=batch_size)
+        return [_embedding_as_floats(vector) for vector in vectors]
+
+
+def _embedding_as_floats(vector: list[float] | str) -> list[float]:
+    if isinstance(vector, str):
+        # OpenAI encodes embeddings as little-endian float32, not text numbers.
+        payload = base64.b64decode(vector, validate=True)
+        return [float(item) for item in np.frombuffer(payload, dtype="<f4")]
+    return vector
+
 
 PromptRunner = Callable[
     [dict, list[Callable[[str], None]] | None, str | None],

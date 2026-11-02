@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = ["setuptools>=64", "setuptools_scm>=8"]
+requires = ["setuptools>=84.1.0", "setuptools_scm>=8"]
 
 [dependency-groups]
 dev = [
@@ -16,28 +16,42 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python",
 ]
 dependencies = [
     "PyMuPDF>=1.24.12",  # For pymupdf.set_messages addition
-    "aiohttp>=3.10.6",  # TODO: remove in favor of httpx, pin for aiohttp.ClientConnectionResetError
-    "anyio",
-    "fh-llm-client",
-    "fhaviary[llm]>=0.10.2",  # For tool execution concurrency
+    "aiohttp>=3.14.4,<4",  # TODO: remove in favor of httpx, pin for aiohttp.ClientConnectionResetError
+    "anyio>=4.14.2",
+    # Patched transitive floors also protect installs from wheel metadata.
+    "certifi>=2026.10.19",
+    "fh-llm-client>=0.0.6,<0.1",
+    "fhaviary[llm]>=0.10.2,<0.13",  # For tool execution concurrency
+    "filelock>=4.2.1",
+    "h11>=0.16.0",
+    "h2>=4.4.1",
+    "hpack>=4.2.0",
     "html2text",  # TODO: evaluate moving to an opt-in dependency
     "httpx",
+    "idna>=3.15",
+    "jinja2>=3.1.6",
+    # Later LiteLLM lines require Pydantic>=2.11, incompatible with fh-llm-client.
+    # Keep this audited backport until that upstream client constraint is lifted.
+    "litellm==1.100.4",
     "numpy",
-    "pybtex",
+    "pybtex>=0.26.1",  # No pkg_resources dependency; compatible with patched setuptools
     "pydantic-settings",
     "pydantic~=2.0,>=2.10.1",  # Pin 2.10 for typing breaks
+    "pygments>=2.20.0",
+    "python-dotenv>=1.2.2",
+    "requests>=2.33.0",
     "rich",
-    "setuptools",  # TODO: remove after release of https://bitbucket.org/pybtex-devs/pybtex/pull-requests/46/replace-pkg_resources-with-importlib
+    "setuptools>=84.1.0",
     "tantivy",
     "tenacity",
     "tiktoken>=0.4.0",
+    "urllib3>=2.8.0",
 ]
 description = "LLM Chain for answering questions from docs"
 dynamic = ["version"]
@@ -54,7 +68,9 @@ requires-python = ">=3.11"
 
 [project.optional-dependencies]
 datasets = [
-    "datasets",
+    "datasets>=5.0.1",
+    "fsspec>=2026.6.0",
+    "pyarrow>=23.0.1",
 ]
 dev = [
     "ipython>=8",  # Pin to keep recent
@@ -63,6 +79,7 @@ dev = [
     "pre-commit>=3.4",  # Pin to keep recent
     "pydantic~=2.0",
     "pylint-pydantic",
+    "pylint>=4.0.9,<4.1",  # 4.1 misclassifies optional Aviary factories as abstract
     "pytest-asyncio",
     "pytest-recording",
     "pytest-rerunfailures",
@@ -70,20 +87,46 @@ dev = [
     "pytest-sugar",
     "pytest-timer[colorama]",
     "pytest-xdist",
-    "pytest>=8",  # Pin to keep recent
+    "pytest>=9.0.3",  # Pin to keep recent
     "python-dotenv",
     "refurb>=2",  # Pin to keep recent
     "typeguard",
-    "vcrpy>=6",  # Pin for https://github.com/kevin1024/vcrpy/issues/884
+    "vcrpy>=8.2.1",  # Pin for https://github.com/kevin1024/vcrpy/issues/884
+    "virtualenv>=21.14.9",
 ]
 ldp = [
-    "ldp>=0.16.0",  # For Callback.before_rollout
+    "ldp>=0.16.0,<0.17",  # For Callback.before_rollout
+]
+lint = [
+    "mypy>=1.13,<1.14",
+    "paper-qa[datasets,ldp,typing,zotero,qdrant]",
+    "pre-commit>=3.4",
+    "pylint-pydantic",
+    "pylint>=4.0.9,<4.1",  # 4.1 misclassifies optional Aviary factories as abstract
+    "refurb>=2,<3",
 ]
 local = [
-    "sentence-transformers",
+    "fonttools>=4.60.2",
+    "pillow>=13.0.0",
+    "sentence-transformers>=5.6.0,<6",
+    "torch>=2.13.0",
+    "transformers>=5.10.0",
 ]
 qdrant = [
     "qdrant-client",
+]
+security-test = [
+    "pytest-asyncio",
+    "pytest-recording",
+    "pytest-subtests",
+    "pytest-timeout>=2.4.0,<3",
+    "pytest>=9.0.3",
+    "typeguard",
+]
+test = [
+    "paper-qa[datasets,ldp,qdrant,security-test,zotero]",
+    "pytest-rerunfailures",
+    "pytest-xdist",
 ]
 typing = [
     "pandas-stubs",
