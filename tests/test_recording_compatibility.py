@@ -26,7 +26,7 @@ def api_request(payload, host="api.openai.com", path="chat/completions"):
 
 def test_non_streaming_default_matches_an_omitted_default() -> None:
     payload = {"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "Q"}]}
-    recorded = normalize_openai_wire_defaults(api_request({**payload, "stream": False}))
+    recorded = normalize_openai_wire_defaults(api_request(payload | {"stream": False}))
     current = normalize_openai_wire_defaults(api_request(payload))
     body(recorded, current)
 
@@ -36,8 +36,8 @@ def test_non_streaming_default_matches_an_omitted_default() -> None:
 )
 def test_semantic_request_changes_still_fail_replay_matching(changed) -> None:
     payload = {"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "Q"}]}
-    recorded = normalize_openai_wire_defaults(api_request({**payload, "stream": False}))
-    current = normalize_openai_wire_defaults(api_request({**payload, **changed}))
+    recorded = normalize_openai_wire_defaults(api_request(payload | {"stream": False}))
+    current = normalize_openai_wire_defaults(api_request(payload | changed))
     with pytest.raises(AssertionError):
         body(recorded, current)
 
@@ -72,10 +72,10 @@ def test_embedding_encodings_match_as_equivalent_numeric_vectors() -> None:
         "dimensions": 3,
     }
     recorded = normalize_openai_wire_defaults(
-        api_request({**payload, "encoding_format": "base64"}, path="embeddings")
+        api_request(payload | {"encoding_format": "base64"}, path="embeddings")
     )
     current = normalize_openai_wire_defaults(
-        api_request({**payload, "encoding_format": "float"}, path="embeddings")
+        api_request(payload | {"encoding_format": "float"}, path="embeddings")
     )
     body(recorded, current)
 
@@ -98,7 +98,7 @@ def test_embedding_semantics_still_fail_replay_matching(changed) -> None:
     }
     recorded = normalize_openai_wire_defaults(api_request(payload, path="embeddings"))
     current = normalize_openai_wire_defaults(
-        api_request({**payload, **changed}, path="embeddings")
+        api_request(payload | changed, path="embeddings")
     )
     with pytest.raises(AssertionError):
         body(recorded, current)
