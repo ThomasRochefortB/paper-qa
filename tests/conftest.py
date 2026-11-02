@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 import os
 import shutil
@@ -7,9 +8,11 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
+from urllib.parse import urlsplit
 
 import pytest
 from dotenv import load_dotenv
+from vcr.request import Request
 
 from paperqa.clients.crossref import CROSSREF_HEADER_KEY
 from paperqa.clients.semantic_scholar import SEMANTIC_SCHOLAR_HEADER_KEY
@@ -54,6 +57,26 @@ ANTHROPIC_API_KEY_HEADER = "x-api-key"
 VCR_DEFAULT_MATCH_ON = "method", "scheme", "host", "port", "path", "query"
 
 
+def normalize_openai_stream_default(request: Request) -> Request:
+    """Match an omitted non-streaming default without ignoring request content."""
+    url = urlsplit(request.uri)
+    if (
+        request.method == "POST"
+        and url.netloc == "api.openai.com"
+        and url.path == "/v1/chat/completions"
+    ):
+        try:
+            payload = json.loads(request.body)
+        except (TypeError, ValueError):
+            return request
+        if isinstance(payload, dict) and payload.get("stream") is False:
+            # The patched SDK omits stream=False. All other fields, including
+            # model, messages, temperature and stream=True, must still match.
+            payload.pop("stream")
+            request.body = json.dumps(payload).encode()
+    return request
+
+
 @pytest.fixture(scope="session", name="vcr_config")
 def fixture_vcr_config(pytestconfig: pytest.Config) -> dict[str, Any]:
     return {
@@ -66,6 +89,7 @@ def fixture_vcr_config(pytestconfig: pytest.Config) -> dict[str, Any]:
         ],
         "record_mode": "once" if pytestconfig.getoption("--run-live") else "none",
         "allow_playback_repeats": True,
+        "before_record_request": normalize_openai_stream_default,
         "cassette_library_dir": str(CASSETTES_DIR),
     }
 

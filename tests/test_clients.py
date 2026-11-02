@@ -10,7 +10,6 @@ from unittest.mock import patch
 import aiohttp
 import pytest
 
-import paperqa
 from paperqa.clients import (
     ALL_CLIENTS,
     CrossrefProvider,
@@ -515,17 +514,17 @@ async def test_odd_client_requests() -> None:
 
 
 @pytest.mark.asyncio
-@patch.object(paperqa.clients.crossref, "CROSSREF_API_REQUEST_TIMEOUT", 0.05)
-@patch.object(
-    paperqa.clients.semantic_scholar, "SEMANTIC_SCHOLAR_API_REQUEST_TIMEOUT", 0.05
-)
 async def test_ensure_robust_to_timeouts() -> None:
     async with aiohttp.ClientSession() as session:
         client = DocMetadataClient(session)
-        details = await client.query(
-            doi="10.1007/s40278-023-41815-2",
-            fields=["doi", "title"],
-        )
+        # Exercise real provider fallback/timeout handling without racing a live
+        # server against a 50 ms timer. No external connection is needed.
+        with patch.object(session, "_request", side_effect=TimeoutError) as request:
+            details = await client.query(
+                doi="10.1007/s40278-023-41815-2",
+                fields=["doi", "title"],
+            )
+        request.assert_awaited()
     assert details is None, "Should return None for timeout"
 
 
