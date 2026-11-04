@@ -38,7 +38,7 @@ CITATION_COUNT_SENTINEL = "CITATION_COUNT_SENTINEL"
             "source": ["semantic_scholar", "crossref"],
             "key": "skarlinski2015effectofnative",
             "doi": "10.1063/1.4938384",
-            "doc_id": "c217ec9289696c3c",
+            "doc_id": "e1b210845c8cc3b5",
             "journal": "Journal of Applied Physics",
             "authors": ["Michael D. Skarlinski", "David J. Quesnel"],
             "formatted_citation": (
@@ -59,7 +59,7 @@ CITATION_COUNT_SENTINEL = "CITATION_COUNT_SENTINEL"
             "source": ["semantic_scholar"],
             "key": "lala2023paperqaretrievalaugmentedgenerative",
             "doi": "10.48550/arxiv.2312.07559",
-            "doc_id": "bb985e0e3265d678",
+            "doc_id": "10ed6a3d678c87a6",
             "journal": "ArXiv",
             "authors": [
                 "Jakub L'ala",
@@ -84,7 +84,7 @@ CITATION_COUNT_SENTINEL = "CITATION_COUNT_SENTINEL"
             "source": ["semantic_scholar", "crossref"],
             "key": "bran2024augmentinglargelanguage",
             "doi": "10.1038/s42256-024-00832-8",
-            "doc_id": "0f650d59b0a2ba5a",
+            "doc_id": "1a11a0ee084e4771",
             "journal": "Nature Machine Intelligence",
             "authors": [
                 "Andres M. Bran",
@@ -157,7 +157,7 @@ async def test_title_search(paper_attributes: dict[str, str]) -> None:
             "source": ["semantic_scholar", "crossref"],
             "key": "herger2024highthroughputscreeningof",
             "doi": "10.1101/2024.04.01.587366",
-            "doc_id": "8e7669b50f31c52b",
+            "doc_id": "07d6bbbe7b18b0df",
             "journal": "BioRxiv",
             "authors": [
                 "Michael Herger",
@@ -185,7 +185,7 @@ async def test_title_search(paper_attributes: dict[str, str]) -> None:
             "source": ["semantic_scholar", "crossref"],
             "key": "adak2001anessentialrole",
             "doi": "10.1023/a:1007154515475",
-            "doc_id": "3012c6676b658a27",
+            "doc_id": "8404b0b6dcea264a",
             "journal": "Molecular and Cellular Biochemistry",
             "authors": [
                 "Subrata Adak",
@@ -209,7 +209,7 @@ async def test_title_search(paper_attributes: dict[str, str]) -> None:
             "source": ["semantic_scholar", "crossref"],
             "key": "unknownauthors2023convalescentantisarscov2plasmaimmuneglobulin",
             "doi": "10.1007/s40278-023-41815-2",
-            "doc_id": "c2a60b772778732c",
+            "doc_id": "a83f2983c7cc2d24",
             "journal": "Reactions Weekly",
             "authors": [],
             "formatted_citation": (

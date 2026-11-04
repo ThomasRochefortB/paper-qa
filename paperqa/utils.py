@@ -231,7 +231,7 @@ def encode_id(value: str | bytes | UUID, maxsize: int | None = 16) -> str:
         value = str(value)
     if isinstance(value, str):
         value = value.lower().encode()
-    return hashlib.md5(value).hexdigest()[:maxsize]  # noqa: S324
+    return hashlib.sha256(value).hexdigest()[:maxsize]
 
 
 def get_year(ts: datetime | None = None) -> str:
